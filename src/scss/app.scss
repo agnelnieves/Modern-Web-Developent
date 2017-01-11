@@ -3,3 +3,7 @@ $almond: #EFDECD;
 body{
 background-color: $almond;
 }
+
+h1:hover{
+  transition: color 1s ease;
+}

@@ -2,11 +2,14 @@
 var gulp = require('gulp');
 var sass = require('gulp-sass');
 var browserSync = require('browser-sync');
+var autoprefixer = require('gulp-autoprefixer')
+
 var reload = browserSync.reload;
 
 //all the files in the src folder
 var SOURCEPATHS = {
-  sassSource : 'src/scss/*.scss'
+  sassSource : 'src/scss/*.scss',
+  htmlSource : 'src/*.html'
 }
 
 //all the files in the app folder
@@ -19,8 +22,17 @@ var APPPATH = {
 //Sass Compiling task
 gulp.task('sass', function(){
   return gulp.src(SOURCEPATHS.sassSource)
-    .pipe(sass({outputStyle: 'expanded'}).on('error', sass.logError))
+    //Runs first because it adds the autoprefix
+    .pipe(autoprefixer())
+    //Runs second because it compiles the sass into minified css
+    .pipe(sass({outputStyle: 'compressed'}).on('error', sass.logError))
+    //Runs last because it adds all the changes to the destination
     .pipe(gulp.dest(APPPATH.css));
+});
+
+gulp.task('copy', function(){
+  gulp.src(SOURCEPATHS.htmlSource)
+    .pipe(gulp.dest(APPPATH.root))
 });
 
 //Browser server with reload
@@ -32,8 +44,9 @@ gulp.task('serve', ['sass'], function(){
   })
 });
 
-gulp.task('watch', ['serve', 'sass'], function(){
+gulp.task('watch', ['serve', 'sass', 'copy'], function(){
   gulp.watch([SOURCEPATHS.sassSource], ['sass']);
+  gulp.watch([SOURCEPATHS.htmlSource], ['copy']);
 });
 
 gulp.task('default', ['watch']);
