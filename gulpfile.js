@@ -13,6 +13,7 @@ var injectPartials = require('gulp-inject-partials')
 var minify = require('gulp-minify');
 var rename = require('gulp-rename');
 var cssmin = require('gulp-cssmin');
+var htmlmin = require('gulp-htmlmin');
 
 var reload = browserSync.reload;
 
@@ -106,8 +107,8 @@ gulp.task('scripts', ['clean-scripts'], function(){
 
 // PRODUCTION TASKS
 
-//---- Listen and copy new files
-gulp.task('compress', function(){
+//---- Js minification
+gulp.task('compressJS', function(){
   gulp.src(SOURCEPATHS.jsSource)
     .pipe(concat('main.js'))
     .pipe(browserify())
@@ -115,9 +116,9 @@ gulp.task('compress', function(){
     .pipe(gulp.dest(APPPATH.js))
 });
 
-//---- Sass compiling
+//---- css minification
 
-gulp.task('compress-css', function(){
+gulp.task('compressCSS', function(){
   var bootstrapCSS = gulp.src('./node_modules/bootstrap/dist/css/bootstrap.css');
   var sassFiles;
 
@@ -135,12 +136,15 @@ gulp.task('compress-css', function(){
     .pipe(gulp.dest(APPPATH.css));
 });
 
-// END OF PRODUCTION TASKS
+//---- html minification
+gulp.task('compressHTML', function() {
+  return gulp.src(SOURCEPATHS.htmlSource)
+    .pipe(injectPartials())
+    .pipe(htmlmin({collapseWhitespace:true}))
+    .pipe(gulp.dest(APPPATH.root))
+});
 
-// gulp.task('copy', ['clean-html'], function(){
-//   gulp.src(SOURCEPATHS.htmlSource)
-//     .pipe(gulp.dest(APPPATH.root))
-// });
+// END OF PRODUCTION TASKS
 
 //---- Serve and reload browser
 gulp.task('serve', ['sass'], function(){
@@ -155,7 +159,6 @@ gulp.task('serve', ['sass'], function(){
 
 gulp.task('watch', ['serve', 'sass', 'clean-css', 'clean-html', 'clean-scripts', 'scripts', 'moveFonts', 'images', 'clean-images', 'html'], function(){
   gulp.watch([SOURCEPATHS.sassSource], ['sass']);
-  // gulp.watch([SOURCEPATHS.htmlSource], ['copy']);
   gulp.watch([SOURCEPATHS.jsSource], ['scripts']);
   gulp.watch([SOURCEPATHS.htmlSource, SOURCEPATHS.htmlPartialSource], ['html'])
 });
@@ -163,3 +166,4 @@ gulp.task('watch', ['serve', 'sass', 'clean-css', 'clean-html', 'clean-scripts',
 //---- Add the watch task to the default Gulp command
 
 gulp.task('default', ['watch']);
+gulp.task('production', ['compressHTML', 'compressCSS', 'compressJS'])
