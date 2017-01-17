@@ -3,8 +3,10 @@ var gulp = require('gulp');
 var sass = require('gulp-sass');
 var browserSync = require('browser-sync');
 var autoprefixer = require('gulp-autoprefixer');
+var browserify = require('gulp-browserify');
 var clean = require('gulp-clean');
 var concat = require('gulp-concat');
+var merge = require('merge-stream');
 
 var reload = browserSync.reload;
 
@@ -33,14 +35,25 @@ gulp.task('clean-scripts', function(){
     .pipe(clean());
 });
 
+gulp.task('clean-css', function(){
+  return gulp.src(APPPATH.css + '/*css', {read: false, force:true})
+    .pipe(clean());
+});
+
 //---- Sass compiling
 
-gulp.task('sass', function(){
-  return gulp.src(SOURCEPATHS.sassSource)
+gulp.task('sass', ['clean-css'], function(){
+  var bootstrapCSS = gulp.src('./node_modules/bootstrap/dist/css/bootstrap.css');
+  var sassFiles;
+
+  sassFiles = gulp.src(SOURCEPATHS.sassSource)
     //Runs first because it adds the autoprefix
     .pipe(autoprefixer())
     //Runs second because it compiles the sass into minified css
     .pipe(sass({outputStyle: 'compressed'}).on('error', sass.logError))
+
+    return merge(bootstrapCSS, sassFiles)
+    .pipe(concat('app.css'))
     //Runs last because it adds all the changes to the destination
     .pipe(gulp.dest(APPPATH.css));
 });
@@ -50,6 +63,7 @@ gulp.task('sass', function(){
 gulp.task('scripts', ['clean-scripts'], function(){
   gulp.src(SOURCEPATHS.jsSource)
     .pipe(concat('main.js'))
+    .pipe(browserify())
     .pipe(gulp.dest(APPPATH.js))
 })
 
@@ -69,7 +83,7 @@ gulp.task('serve', ['sass'], function(){
 
 //---- Concatenate tasks on a single task
 
-gulp.task('watch', ['serve', 'sass', 'copy', 'clean-html', 'clean-scripts', 'scripts'], function(){
+gulp.task('watch', ['serve', 'sass', 'clean-css', 'copy', 'clean-html', 'clean-scripts', 'scripts'], function(){
   gulp.watch([SOURCEPATHS.sassSource], ['sass']);
   gulp.watch([SOURCEPATHS.htmlSource], ['copy']);
   gulp.watch([SOURCEPATHS.jsSource], ['scripts']);
