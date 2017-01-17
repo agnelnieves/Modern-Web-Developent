@@ -7,6 +7,8 @@ var browserify = require('gulp-browserify');
 var clean = require('gulp-clean');
 var concat = require('gulp-concat');
 var merge = require('merge-stream');
+var newer = require('gulp-newer');
+var imagemin = require('gulp-imagemin');
 
 var reload = browserSync.reload;
 
@@ -14,7 +16,8 @@ var reload = browserSync.reload;
 var SOURCEPATHS = {
   sassSource : 'src/scss/*.scss',
   htmlSource : 'src/*.html',
-  jsSource : 'src/js/**'
+  jsSource : 'src/js/**',
+  imgSource : 'src/img/**'
 }
 
 //all the files in the app folder
@@ -22,7 +25,8 @@ var APPPATH = {
   root : 'app/',
   css : 'app/css',
   js: 'app/js',
-  fonts: 'app/fonts'
+  fonts: 'app/fonts',
+  img: 'app/img'
 }
 
 //---- Listen and clean deleted files
@@ -38,6 +42,11 @@ gulp.task('clean-scripts', function(){
 
 gulp.task('clean-css', function(){
   return gulp.src(APPPATH.css + '/*css', {read: false, force:true})
+    .pipe(clean());
+});
+
+gulp.task('clean-images', function(){
+  return gulp.src(APPPATH.img + '/**', {read: false, force:true})
     .pipe(clean());
 });
 
@@ -59,6 +68,17 @@ gulp.task('sass', ['clean-css'], function(){
     .pipe(gulp.dest(APPPATH.css));
 });
 
+
+//---- Image minification task
+gulp.task('images', function(){
+  return gulp.src(SOURCEPATHS.imgSource)
+    .pipe(newer(APPPATH.img))
+    .pipe(imagemin())
+    .pipe(gulp.dest(APPPATH.img));
+});
+
+
+
 //---- Move bootstrap fonts
 gulp.task('moveFonts', function(){
   gulp.src('./node_modules/bootstrap/dist/fonts/*.{eot,svg,ttf,woff,woff2}')
@@ -66,7 +86,6 @@ gulp.task('moveFonts', function(){
 });
 
 //---- Listen and copy new files
-
 gulp.task('scripts', ['clean-scripts'], function(){
   gulp.src(SOURCEPATHS.jsSource)
     .pipe(concat('main.js'))
@@ -90,7 +109,7 @@ gulp.task('serve', ['sass'], function(){
 
 //---- Concatenate tasks on a single task
 
-gulp.task('watch', ['serve', 'sass', 'clean-css', 'copy', 'clean-html', 'clean-scripts', 'scripts', 'moveFonts'], function(){
+gulp.task('watch', ['serve', 'sass', 'clean-css', 'copy', 'clean-html', 'clean-scripts', 'scripts', 'moveFonts', 'images', 'clean-images'], function(){
   gulp.watch([SOURCEPATHS.sassSource], ['sass']);
   gulp.watch([SOURCEPATHS.htmlSource], ['copy']);
   gulp.watch([SOURCEPATHS.jsSource], ['scripts']);
