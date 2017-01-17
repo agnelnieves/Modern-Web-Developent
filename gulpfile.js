@@ -21,7 +21,8 @@ var SOURCEPATHS = {
 var APPPATH = {
   root : 'app/',
   css : 'app/css',
-  js: 'app/js'
+  js: 'app/js',
+  fonts: 'app/fonts'
 }
 
 //---- Listen and clean deleted files
@@ -58,6 +59,12 @@ gulp.task('sass', ['clean-css'], function(){
     .pipe(gulp.dest(APPPATH.css));
 });
 
+//---- Move bootstrap fonts
+gulp.task('moveFonts', function(){
+  gulp.src('./node_modules/bootstrap/dist/fonts/*.{eot,svg,ttf,woff,woff2}')
+  .pipe(gulp.dest(APPPATH.fonts));
+});
+
 //---- Listen and copy new files
 
 gulp.task('scripts', ['clean-scripts'], function(){
@@ -83,7 +90,7 @@ gulp.task('serve', ['sass'], function(){
 
 //---- Concatenate tasks on a single task
 
-gulp.task('watch', ['serve', 'sass', 'clean-css', 'copy', 'clean-html', 'clean-scripts', 'scripts'], function(){
+gulp.task('watch', ['serve', 'sass', 'clean-css', 'copy', 'clean-html', 'clean-scripts', 'scripts', 'moveFonts'], function(){
   gulp.watch([SOURCEPATHS.sassSource], ['sass']);
   gulp.watch([SOURCEPATHS.htmlSource], ['copy']);
   gulp.watch([SOURCEPATHS.jsSource], ['scripts']);
