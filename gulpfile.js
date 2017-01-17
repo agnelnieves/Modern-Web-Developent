@@ -2,14 +2,16 @@
 var gulp = require('gulp');
 var sass = require('gulp-sass');
 var browserSync = require('browser-sync');
-var autoprefixer = require('gulp-autoprefixer')
+var autoprefixer = require('gulp-autoprefixer');
+var clean = require('gulp-clean');
 
 var reload = browserSync.reload;
 
 //all the files in the src folder
 var SOURCEPATHS = {
   sassSource : 'src/scss/*.scss',
-  htmlSource : 'src/*.html'
+  htmlSource : 'src/*.html',
+  jsSource : 'src/js/*.js'
 }
 
 //all the files in the app folder
@@ -19,7 +21,19 @@ var APPPATH = {
   js: 'app/js'
 }
 
-//Sass Compiling task
+//---- Listen and clean deleted files
+gulp.task('clean-html', function(){
+  return gulp.src(APPPATH.root + '/*html', {read: false, force:true})
+    .pipe(clean());
+});
+
+gulp.task('clean-scripts', function(){
+  return gulp.src(APPPATH.js + '/*js', {read: false, force:true})
+    .pipe(clean());
+});
+
+//---- Sass compiling
+
 gulp.task('sass', function(){
   return gulp.src(SOURCEPATHS.sassSource)
     //Runs first because it adds the autoprefix
@@ -30,12 +44,19 @@ gulp.task('sass', function(){
     .pipe(gulp.dest(APPPATH.css));
 });
 
-gulp.task('copy', function(){
+//---- Listen and copy new files
+
+gulp.task('scripts', ['clean-scripts'], function(){
+  gulp.src(SOURCEPATHS.jsSource)
+    .pipe(gulp.dest(APPPATH.js))
+})
+
+gulp.task('copy', ['clean-html'], function(){
   gulp.src(SOURCEPATHS.htmlSource)
     .pipe(gulp.dest(APPPATH.root))
 });
 
-//Browser server with reload
+//---- Serve and reload browser
 gulp.task('serve', ['sass'], function(){
   browserSync.init([APPPATH.css + '/*.css', APPPATH.root + '/*.html', APPPATH.js + '/*.js'], {
     server: {
@@ -44,9 +65,14 @@ gulp.task('serve', ['sass'], function(){
   })
 });
 
-gulp.task('watch', ['serve', 'sass', 'copy'], function(){
+//---- Concatenate tasks on a single task
+
+gulp.task('watch', ['serve', 'sass', 'copy', 'clean-html', 'clean-scripts', 'scripts'], function(){
   gulp.watch([SOURCEPATHS.sassSource], ['sass']);
   gulp.watch([SOURCEPATHS.htmlSource], ['copy']);
+  gulp.watch([SOURCEPATHS.jsSource], ['scripts']);
 });
+
+//---- Add the watch task to the default Gulp command
 
 gulp.task('default', ['watch']);
