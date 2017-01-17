@@ -10,6 +10,7 @@ var merge = require('merge-stream');
 var newer = require('gulp-newer');
 var imagemin = require('gulp-imagemin');
 var injectPartials = require('gulp-inject-partials')
+var minify = require('gulp-minify');
 
 var reload = browserSync.reload;
 
@@ -98,6 +99,15 @@ gulp.task('scripts', ['clean-scripts'], function(){
   gulp.src(SOURCEPATHS.jsSource)
     .pipe(concat('main.js'))
     .pipe(browserify())
+    .pipe(gulp.dest(APPPATH.js))
+});
+
+//---- Listen and copy new files
+gulp.task('compress', function(){
+  gulp.src(SOURCEPATHS.jsSource)
+    .pipe(concat('main.js'))
+    .pipe(browserify())
+    .pipe(minify())
     .pipe(gulp.dest(APPPATH.js))
 });
 
