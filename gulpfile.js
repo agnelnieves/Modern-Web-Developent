@@ -11,6 +11,8 @@ var newer = require('gulp-newer');
 var imagemin = require('gulp-imagemin');
 var injectPartials = require('gulp-inject-partials')
 var minify = require('gulp-minify');
+var rename = require('gulp-rename');
+var cssmin = require('gulp-cssmin');
 
 var reload = browserSync.reload;
 
@@ -102,6 +104,8 @@ gulp.task('scripts', ['clean-scripts'], function(){
     .pipe(gulp.dest(APPPATH.js))
 });
 
+// PRODUCTION TASKS
+
 //---- Listen and copy new files
 gulp.task('compress', function(){
   gulp.src(SOURCEPATHS.jsSource)
@@ -110,6 +114,28 @@ gulp.task('compress', function(){
     .pipe(minify())
     .pipe(gulp.dest(APPPATH.js))
 });
+
+//---- Sass compiling
+
+gulp.task('compress-css', function(){
+  var bootstrapCSS = gulp.src('./node_modules/bootstrap/dist/css/bootstrap.css');
+  var sassFiles;
+
+  sassFiles = gulp.src(SOURCEPATHS.sassSource)
+    //Runs first because it adds the autoprefix
+    .pipe(autoprefixer())
+    //Runs second because it compiles the sass into minified css
+    .pipe(sass({outputStyle: 'expanded'}).on('error', sass.logError))
+
+    return merge(bootstrapCSS, sassFiles)
+    .pipe(concat('app.css'))
+    .pipe(cssmin())
+    .pipe(rename({suffix: '.min'}))
+    //Runs last because it adds all the changes to the destination
+    .pipe(gulp.dest(APPPATH.css));
+});
+
+// END OF PRODUCTION TASKS
 
 // gulp.task('copy', ['clean-html'], function(){
 //   gulp.src(SOURCEPATHS.htmlSource)
